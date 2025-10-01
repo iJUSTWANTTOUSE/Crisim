@@ -1,1 +1,3 @@
-{ "apiUrl": "" }
+{
+  "apiUrl": "https://pictures-corrections-beijing-script.trycloudflare.com/v1/completions"
+}
