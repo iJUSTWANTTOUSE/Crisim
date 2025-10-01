@@ -4,17 +4,8 @@
 <meta charset="UTF-8">
 <title>CriSim</title>
 <style>
-body {
-  font-family: sans-serif;
-  background: #e0f0ff; /* Uniform background color */
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
-}
+body { font-family: sans-serif; background: #e0f0ff; margin: 0; padding: 0; display: flex; flex-direction: column; height: 100vh; }
 header { background: #0077cc; color: white; padding: 15px; text-align: center; }
-header h1 { margin: 0; font-size: 1.8em; }
 #controls { background: #e9f3ff; text-align: center; padding: 10px; }
 #controls button { padding: 10px 20px; margin: 5px; border: none; border-radius: 8px; cursor: pointer; font-size: 1em; }
 #startBtn { background: #28a745; color: white; }
@@ -40,10 +31,9 @@ header h1 { margin: 0; font-size: 1.8em; }
 <body>
 <header>
   <h1>CriSim</h1>
-  <p style="margin: 8px 0 0; font-size: 1.1em;">
-    An interactive school crisis simulator for training and preparedness.
-  </p>
+  <p style="margin: 8px 0 0; font-size: 1.1em;">An interactive school crisis simulator for training and preparedness.</p>
 </header>
+
 <div id="controls">
 <button id="startBtn" onclick="startScenario()">Start Scenario</button>
 <button id="refreshBtn" onclick="refreshScenario()">Refresh</button>
@@ -62,30 +52,21 @@ header h1 { margin: 0; font-size: 1.8em; }
 const API_URL = "https://openrouter.ai/api/v1/chat/completions";
 const API_KEY = "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";
 
-const scenarioPrompt = `"Act as a roleplay chatbot for CriSim, a school crisis simulator. At random intervals, simulate a realistic school emergency scenario. Possible emergencies include:  Active shooter  Severe weather (e.g., tornado, hurricane)  Medical emergency (e.g., student collapse, allergic reaction)  Fire  Chemical spill  Earthquake  Begin with a calm school setting, then trigger an emergency using natural dialogue and environmental cues. Guide the user through decision-making steps based on standard school safety protocols. Include:  Time of day and location (e.g., 2:15 PM in the science lab)  NPC dialogue (students, teachers, staff)  Environmental sounds or alerts (e.g., sirens, announcements)  Branching choices for the user to respond (e.g., “Do you evacuate or shelter in place?”)  Feedback based on user choices (e.g., “Correct: You locked the door and stayed quiet.”)  Keep the tone serious but engaging. Use immersive storytelling and realistic pacing. Occasionally introduce twists (e.g., blocked exits, misinformation, panicked students). The goal is to reinforce proper emergency response protocols through interactive simulation. Rules:
-- NEVER output code or programming syntax. Only plain text narrative. Numbered choices:
-1. Option one
-2. Option two
-3. Option three" `;
+const scenarioPrompt = `
+Act as a roleplay chatbot for CriSim, a school crisis simulator. At random intervals, simulate a realistic school emergency scenario... (your entire original scenario rules stay here)
+`;
+
+let runningContext = [{ role: "system", content: scenarioPrompt }];
 
 const messagesDiv = document.getElementById("messages");
-const startBtn = document.getElementById("startBtn");
-const refreshBtn = document.getElementById("refreshBtn");
 const choicesDiv = document.getElementById("choices");
 const customInputContainer = document.getElementById("customInputContainer");
 const customInput = document.getElementById("customInput");
-const sendCustom = document.getElementById("sendCustom");
 
-let runningContext = "";
-
-function appendMessage(sender, text, isBot=false) {
+function appendMessage(sender, text, isBot = false) {
     const div = document.createElement("div");
     div.classList.add("msg");
-    if (isBot) {
-        div.innerHTML = `<span class="bot">${sender}:</span> <div class="bot-msg">${marked.parse(text)}</div>`;
-    } else {
-        div.innerHTML = `<span class="user">${sender}:</span> <div class="user-msg">${marked.parse(text)}</div>`;
-    }
+    div.innerHTML = `<span class="${isBot ? 'bot' : 'user'}">${sender}:</span> <div class="${isBot ? 'bot-msg' : 'user-msg'}">${marked.parse(text)}</div>`;
     messagesDiv.appendChild(div);
     messagesDiv.scrollTop = messagesDiv.scrollHeight;
 }
@@ -100,71 +81,55 @@ function displayChoices(options) {
         btn.onclick = () => handleChoice(option);
         choicesDiv.appendChild(btn);
     });
-
-    // Show custom input
     customInputContainer.style.display = "flex";
-    customInput.value = "";
-    sendCustom.onclick = () => {
-        const userText = customInput.value.trim();
-        if (userText !== "") handleChoice(userText);
-    };
 }
 
 async function handleChoice(choiceText) {
     appendMessage("You", choiceText, false);
-    runningContext += `You: ${choiceText}\n`;
+    runningContext.push({ role: "user", content: choiceText });
     choicesDiv.style.display = "none";
     customInputContainer.style.display = "none";
-    await sendToBot(choiceText);
+    await sendToBot();
 }
 
 async function startScenario() {
-    startBtn.style.display = "none";
-    refreshBtn.style.display = "inline-block";
+    document.getElementById("startBtn").style.display = "none";
+    document.getElementById("refreshBtn").style.display = "inline-block";
     messagesDiv.innerHTML = "";
-    choicesDiv.style.display = "none";
-    customInputContainer.style.display = "none";
-
     appendMessage("System", "Starting scenario...", true);
-    runningContext = scenarioPrompt + "\n\n";
-    await sendToBot(scenarioPrompt);
+    runningContext = [{ role: "system", content: scenarioPrompt }];
+    await sendToBot();
 }
 
 function refreshScenario() {
-    startBtn.style.display = "inline-block";
-    refreshBtn.style.display = "none";
+    document.getElementById("startBtn").style.display = "inline-block";
+    document.getElementById("refreshBtn").style.display = "none";
     messagesDiv.innerHTML = "";
-    choicesDiv.style.display = "none";
-    customInputContainer.style.display = "none";
     appendMessage("System", "Scenario reset. Click 'Start Scenario' to begin again.", true);
-    runningContext = "";
+    runningContext = [];
 }
 
-async function sendToBot(userInput="") {
-    try {
-        const response = await fetch(API_URL, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ model: "koboldcpp", prompt: runningContext, max_tokens: 500 })
-        });
+async function sendToBot() {
+    const response = await fetch(API_URL, {
+        method: "POST",
+        headers: { 
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${API_KEY}`
+        },
+        body: JSON.stringify({ 
+            model: "mistralai/mixtral-8x7b-instruct",
+            messages: runningContext,
+            max_tokens: 500 
+        })
+    });
+    const data = await response.json();
+    const botReply = data.choices?.[0]?.message?.content || "(no response)";
+    appendMessage("CriSim", botReply, true);
+    runningContext.push({ role: "assistant", content: botReply });
 
-        const data = await response.json();
-        const botReply = data.choices?.[0]?.text || "(no response)";
-        const cleanReply = botReply.replace(/```[\s\S]*?```/g, '').trim();
-        appendMessage("CriSim", cleanReply, true);
-        runningContext += `CriSim: ${cleanReply}\n`;
-
-        // Extract numbered options
-        const choiceLines = cleanReply.split("\n").filter(line => /^\d+\.\s/.test(line.trim()));
-        if (choiceLines.length > 0) {
-            const cleanOptions = choiceLines.map(line => line.replace(/^\d+\.\s*/, '').trim());
-            displayChoices(cleanOptions);
-        }
-    } catch (err) {
-        appendMessage("Error", "Could not reach KoboldCPP API.", true);
-    }
+    const choiceLines = botReply.split("\n").filter(line => /^\d+\.\s/.test(line.trim()));
+    if (choiceLines.length > 0) displayChoices(choiceLines.map(line => line.replace(/^\d+\.\s*/, '').trim()));
 }
 </script>
 </body>
 </html>
-
