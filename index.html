@@ -59,7 +59,8 @@ header h1 { margin: 0; font-size: 1.8em; }
 </div>
 
 <script>
-const API_URL = "http://108.17.131.220:5001/v1/completions";
+const API_URL = "https://openrouter.ai/api/v1/chat/completions";
+const API_KEY = "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";
 
 const scenarioPrompt = `"Act as a roleplay chatbot for CriSim, a school crisis simulator. At random intervals, simulate a realistic school emergency scenario. Possible emergencies include:  Active shooter  Severe weather (e.g., tornado, hurricane)  Medical emergency (e.g., student collapse, allergic reaction)  Fire  Chemical spill  Earthquake  Begin with a calm school setting, then trigger an emergency using natural dialogue and environmental cues. Guide the user through decision-making steps based on standard school safety protocols. Include:  Time of day and location (e.g., 2:15 PM in the science lab)  NPC dialogue (students, teachers, staff)  Environmental sounds or alerts (e.g., sirens, announcements)  Branching choices for the user to respond (e.g., “Do you evacuate or shelter in place?”)  Feedback based on user choices (e.g., “Correct: You locked the door and stayed quiet.”)  Keep the tone serious but engaging. Use immersive storytelling and realistic pacing. Occasionally introduce twists (e.g., blocked exits, misinformation, panicked students). The goal is to reinforce proper emergency response protocols through interactive simulation. Rules:
 - NEVER output code or programming syntax. Only plain text narrative. Numbered choices:
@@ -166,3 +167,4 @@ async function sendToBot(userInput="") {
 </script>
 </body>
 </html>
+
