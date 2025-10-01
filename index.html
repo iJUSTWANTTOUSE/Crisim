@@ -6,7 +6,7 @@
 <style>
 body {
   font-family: sans-serif;
-  background: #e0f0ff; /* Uniform background color */
+  background: #e0f0ff;
   margin: 0;
   padding: 0;
   display: flex;
@@ -61,6 +61,7 @@ header h1 { margin: 0; font-size: 1.8em; }
 <script>
 let API_URL = "";
 
+// Load API URL from config.json
 async function loadConfig() {
   try {
     const res = await fetch("config.json?cacheBust=" + Date.now());
@@ -72,15 +73,7 @@ async function loadConfig() {
   }
 }
 
-// Load on startup
-loadConfig();
-
-
-const scenarioPrompt = `"Act as a roleplay chatbot for CriSim, a school crisis simulator. At random intervals, simulate a realistic school emergency scenario. Possible emergencies include:  Active shooter  Severe weather (e.g., tornado, hurricane)  Medical emergency (e.g., student collapse, allergic reaction)  Fire  Chemical spill  Earthquake  Begin with a calm school setting, then trigger an emergency using natural dialogue and environmental cues. Guide the user through decision-making steps based on standard school safety protocols. Include:  Time of day and location (e.g., 2:15 PM in the science lab)  NPC dialogue (students, teachers, staff)  Environmental sounds or alerts (e.g., sirens, announcements)  Branching choices for the user to respond (e.g., “Do you evacuate or shelter in place?”)  Feedback based on user choices (e.g., “Correct: You locked the door and stayed quiet.”)  Keep the tone serious but engaging. Use immersive storytelling and realistic pacing. Occasionally introduce twists (e.g., blocked exits, misinformation, panicked students). The goal is to reinforce proper emergency response protocols through interactive simulation. Rules:
-- NEVER output code or programming syntax. Only plain text narrative. Numbered choices:
-1. Option one
-2. Option two
-3. Option three" `;
+const scenarioPrompt = `"Act as a roleplay chatbot for CriSim, a school crisis simulator. At random intervals, simulate a realistic school emergency scenario. Possible emergencies include: Active shooter, Severe weather, Medical emergency, Fire, Chemical spill, Earthquake. Begin with a calm school setting, then trigger an emergency using natural dialogue and environmental cues. Guide the user through decision-making steps based on standard school safety protocols. Include: Time of day and location, NPC dialogue, Environmental sounds or alerts, Branching choices for the user to respond, Feedback based on user choices. Keep tone serious but engaging. Occasionally introduce twists. Rules: NEVER output code. Numbered choices: 1. Option one 2. Option two 3. Option three"`;
 
 const messagesDiv = document.getElementById("messages");
 const startBtn = document.getElementById("startBtn");
@@ -115,7 +108,6 @@ function displayChoices(options) {
         choicesDiv.appendChild(btn);
     });
 
-    // Show custom input
     customInputContainer.style.display = "flex";
     customInput.value = "";
     sendCustom.onclick = () => {
@@ -140,6 +132,10 @@ async function startScenario() {
     customInputContainer.style.display = "none";
 
     appendMessage("System", "Starting scenario...", true);
+
+    // Wait for API_URL to load before starting
+    await loadConfig();
+
     runningContext = scenarioPrompt + "\n\n";
     await sendToBot(scenarioPrompt);
 }
@@ -168,7 +164,6 @@ async function sendToBot(userInput="") {
         appendMessage("CriSim", cleanReply, true);
         runningContext += `CriSim: ${cleanReply}\n`;
 
-        // Extract numbered options
         const choiceLines = cleanReply.split("\n").filter(line => /^\d+\.\s/.test(line.trim()));
         if (choiceLines.length > 0) {
             const cleanOptions = choiceLines.map(line => line.replace(/^\d+\.\s*/, '').trim());
@@ -181,6 +176,3 @@ async function sendToBot(userInput="") {
 </script>
 </body>
 </html>
-
-
-
