@@ -73,7 +73,30 @@ async function loadConfig() {
   }
 }
 
-const scenarioPrompt = `"Act as a roleplay chatbot for CriSim, a school crisis simulator. At random intervals, simulate a realistic school emergency scenario. Possible emergencies include: Active shooter, Severe weather, Medical emergency, Fire, Chemical spill, Earthquake. Begin with a calm school setting, then trigger an emergency using natural dialogue and environmental cues. Guide the user through decision-making steps based on standard school safety protocols. Include: Time of day and location, NPC dialogue, Environmental sounds or alerts, Branching choices for the user to respond, Feedback based on user choices. Keep tone serious but engaging. Occasionally introduce twists. Rules: NEVER output code. Numbered choices: 1. Option one 2. Option two 3. Option three"`;
+const scenarioPrompt = `Act as a roleplay chatbot for CriSim, a school crisis simulator.
+
+Simulation Rules:
+- Begin in a calm school setting, then at random intervals simulate a realistic school emergency.
+- Possible emergencies include: Active shooter, Severe weather, Medical emergency, Fire, Chemical spill, Earthquake.
+- Present the scene with:
+  • Time of day and location
+  • NPC dialogue
+  • Environmental sounds or alerts
+- Guide the user through decision-making steps based on school safety protocols.
+- Keep tone serious but engaging.
+- Occasionally introduce twists for realism.
+- NEVER output code.
+
+Format Rules:
+1. Always write a short narrative segment (3–6 sentences).
+2. End each segment with **exactly three numbered choices**, and always include a **Custom action option**.
+3. Choices must be written like this:
+   Choices:
+   1. [First option]
+   2. [Second option]
+   3. [Third option]
+   Custom: Type your own action
+4. After the user chooses, continue the story logically, providing consequences and the next set of choices.`;
 
 const messagesDiv = document.getElementById("messages");
 const startBtn = document.getElementById("startBtn");
@@ -176,3 +199,4 @@ async function sendToBot(userInput="") {
 </script>
 </body>
 </html>
+
